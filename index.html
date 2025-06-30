@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BDED29PG8P"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-BDED29PG8P');
+  </script>
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ward Boundary Checker - Is your home address in Ward 98?</title>
+  
+  <meta name="district-auth" content="phoenix">
+  <meta name="boundary-year" content="2025">
+  <meta name="election-type" content="municipal">
+  <meta name="region-code" content="za">
+  <meta name="target-ward" content="98">
+  
+  <!-- Leaflet CSS for maps -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header p {
+      font-size: 1.2em;
+      opacity: 0.9;
+    }
+    
+    .step-container {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .step-header {
+      background: linear-gradient(90deg, #4CAF50, #45a049);
+      color: white;
+      padding: 20px;
+      font-size: 1.3em;
+      font-weight: bold;
+    }
+    
+    .step-content {
+      padding: 30px;
+    }
+    
+    .status-message {
+      margin: 20px 0;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    
+    .status-loading {
+      background-color: #e3f2fd;
+      color: #1565c0;
+      border-left: 4px solid #2196f3;
+    }
+    
+    .status-success {
+      background-color: #e8f5e8;
+      color: #2e7d32;
+      border-left: 4px solid #4caf50;
+    }
+    
+    .status-error {
+      background-color: #ffebee;
+      color: #c62828;
+      border-left: 4px solid #f44336;
+    }
+    
+    .status-warning {
+      background-color: #fff3e0;
+      color: #ef6c00;
+      border-left: 4px solid #ff9800;
+    }
+    
+    #map {
+      height: 500px;
+      width: 100%;
+      border-radius: 10px;
+      margin: 20px 0;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .form-container {
+      margin-top: 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+    
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+    
+    .check-address-btn {
+      background: linear-gradient(45deg, #4CAF50, #45a049);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+      width: 100%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .check-address-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    .check-address-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .footer {
+      text-align: center;
+      color: white;
+      padding: 20px;
+      background: rgba(0,0,0,0.2);
+      margin-top: 50px;
+      border-radius: 10px;
+    }
+    
+    .footer a {
+      color: #FFD700;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    
+    .footer a:hover {
+      text-decoration: underline;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .address-result {
+      margin: 15px 0;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #4CAF50;
+      background: #f1f8e9;
+    }
+    
+    .legend {
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      font-size: 14px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+    
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+      border: 2px solid white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      
+      .header h1 {
+        font-size: 2em;
+      }
+      
+      .step-content {
+        padding: 20px;
+      }
+      
+      #map {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="ward-data" data-region="za" data-type="municipal" data-district="phoenix" data-ward="98" class="ward-auth">
+    
+    <div class="container">
+      <div class="header">
+        <h1>🗳️ Ward 98 Eligibility Checker</h1>
+        <p>Check if your home address is within Ward 98 boundaries</p>
+      </div>
+
+      <!-- Main Form -->
+      <div class="step-container" id="formSection">
+        <div class="step-header" id="formHeader">
+          📝 Check Your Eligibility to Vote in Ward 98
+        </div>
+        <div class="step-content">
+          <div id="formInstructions">
+            <p><strong>Please enter your details below to check if your home address is within Ward 98 boundaries.</strong></p>
+            <p>This form is a handy tool to confirm on a map whether you're eligible to vote in this by-election.</p>
+          </div>
+          
+          <div class="form-container">
+            <form id="voterForm">
+              <div class="form-group">
+                <label for="firstName">Name *</label>
+                <input type="text" id="firstName" name="firstName" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="lastName">Surname *</label>
+                <input type="text" id="lastName" name="lastName" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="streetAddress">Street Address *</label>
+                <input type="text" id="streetAddress" name="streetAddress" 
+                       placeholder="e.g. 123 Main Street" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="suburb">Suburb *</label>
+                <input type="text" id="suburb" name="suburb" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="cellphone">Cellphone Number *</label>
+                <input type="tel" id="cellphone" name="cellphone" required>
+              </div>
+              
+              <button type="button" class="check-address-btn" id="checkAddressBtn">
+                🏠 Check My Address
+              </button>
+              
+              <div id="addressResult" class="hidden"></div>
+              <div id="status"></div>
+              
+              <!-- Map container -->
+              <div id="map" class="hidden"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>&copy; Ward By Elections 2025 | 
+          <a href="https://voterza.github.io/who/" target="_blank">
+            Calculate who you should vote for based on your opinions
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>  
+  <script src="https://sa-address-utils.github.io/address-validation/municipal-bounds.js"></script>
+  <script src="https://sa-address-utils.github.io/address-validation/address-geocoder.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const authKey = extractAuthenticationKey();
+      
+      if (authKey && authKey === 'phoenix-za-municipal-2025') {
+        initializeSecureWardSystem(authKey);
+      } else {
+        console.error('❌ Authentication failed');
+        showAuthenticationError();
+      }
+    });
+
+    function extractAuthenticationKey() {
+      try {
+        const district = document.querySelector('meta[name="district-auth"]')?.content || '';
+        const year = document.querySelector('meta[name="boundary-year"]')?.content || '';
+        const region = document.querySelector('meta[name="region-code"]')?.content || '';
+        const type = document.querySelector('meta[name="election-type"]')?.content || '';
+        
+        const authKey = `${district}-${region}-${type}-${year}`;
+        
+        return authKey;
+      } catch (error) {
+        console.error('Key extraction failed:', error);
+        return null;
+      }
+    }
+
+    function initializeSecureWardSystem(authKey) {
+      if (typeof window.SecureWardSystem !== 'undefined') {
+        const targetWard = document.querySelector('meta[name="target-ward"]')?.content || '98';
+        
+        const wardData = window.SecureWardSystem.unlock(authKey, targetWard);
+        
+        if (wardData.authenticated) {
+          window.WARD_BOUNDARIES = wardData.ward_boundaries;
+          window.FORM_CONFIG = wardData.form_config;
+          window.TARGET_WARD = targetWard;
+          
+          if (typeof initializeApp === 'function') {
+            initializeApp();
+          }
+        } else {
+          showAuthenticationError();
+        }
+      } else {
+        console.error('Secure ward system not loaded');
+        showAuthenticationError();
+      }
+    }
+
+    function showAuthenticationError() {
+      document.body.innerHTML = `
+        <div style="text-align: center; padding: 50px; color: #666; font-family: Arial, sans-serif;">
+          <h2>🔐 System Authentication Required</h2>
+          <p>This ward boundary system requires proper authentication.</p>
+          <p>Please contact the system administrator for access.</p>
+          <small style="color: #999;">Error: Invalid authentication credentials</small>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
